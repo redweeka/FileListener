@@ -33,11 +33,14 @@ class MyFileObserver(val folderPath: String) {
             CLOSE_WRITE -> fileRelativePath?.let {
                 Log.d(TAG, "File created/updated: $it")
                 // Handle the created file here
-                val newFile = File("$folderPath/$it")
+                val newFile = File("$folderPath/${it.split("-").last()}")
 
-                if (newFile.exists()) {
-                    ApiService.sendFileToApi(newFile)
-                }
+                // TODO: camera save picture and then change its name, need to handle it better
+//                if (newFile.exists()) {
+                ApiService.sendFileToApi(newFile)
+//                } else {
+//                    Log.d(TAG, "onEvent: file not exist")
+//                }
             }
         }
     }

@@ -55,6 +55,8 @@ class ApiService {
 
                 // Process if the response failed
                 if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                    Log.e(TAG, "sendFileToApi: send file ${file.name} failed")
+                } else {
                     Log.d(TAG, "sendFileToApi: send file ${file.name} successfully")
                 }
             } catch (e: Exception) {
