@@ -61,6 +61,9 @@ class MainActivity : AppCompatActivity() {
         if (file.exists()) {
             myFileObserver = MyFileObserver(FILE_OBSERVED_PATH)
             myFileObserver?.startWatching()
+            Log.d(TAG, "accessFolder: service 900")
+            //val serviceIntent = Intent(this, FilesObserverService::class.java)
+            //this.startService(serviceIntent)
         } else {
             Log.w(TAG, "accessFolder: file not exists")
         }

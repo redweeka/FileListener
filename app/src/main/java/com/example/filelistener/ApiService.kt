@@ -1,7 +1,7 @@
 package com.example.filelistener
 
 import android.util.Log
-import com.example.filelistener.Constants.Companion.API_URL
+import com.example.filelistener.Constants.Companion.API_PHOTOS_FILE_URL
 import java.io.DataOutputStream
 import java.io.File
 import java.net.HttpURLConnection
@@ -19,7 +19,8 @@ class ApiService {
             val twoHyphens = "--"
 
             try {
-                val url = URL(API_URL)
+                val url = URL(API_PHOTOS_FILE_URL)
+                createDirectoryIfNotExists(url.toString())
                 val connection = (url.openConnection() as HttpURLConnection).apply {
                     // Set connection properties
                     doInput = true
@@ -47,6 +48,7 @@ class ApiService {
                     val fileBytes = Files.readAllBytes(file.toPath())
                     outputStream.write(fileBytes)
 
+
                     // End the file
                     outputStream.writeBytes(lineEnd)
                     outputStream.writeBytes("$twoHyphens$boundary$twoHyphens$lineEnd")
@@ -61,8 +63,23 @@ class ApiService {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+
                 // Handle the exception
             }
         }
+
+
+        private fun createDirectoryIfNotExists(directoryPath: String): Boolean {
+            val directory = File(directoryPath)
+
+            if (!directory.exists()) {
+                return directory.mkdirs()
+            }
+
+            return true
+        }
+
+
+
     }
 }
