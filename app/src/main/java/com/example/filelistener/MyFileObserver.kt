@@ -13,14 +13,15 @@ import com.example.filelistener.Constants.Companion.FILE_OBSERVED_PATH
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-
+import java.util.LinkedList
+import java.util.Queue
 
 
 class MyFileObserver(val folderPath: String) {
     private val TAG = "MyFileObserver"
     private var fileObserver: FileObserver? = null
     private var handler: Handler? = null
-    private val photoList = mutableListOf<File>()
+    private val photoQueue : Queue<File> = LinkedList()
 
     init {
         //
@@ -42,7 +43,7 @@ class MyFileObserver(val folderPath: String) {
             }
         }
 
-        // Initialize the handler for periodic sending and moving
+        // Initialize the handler for periodic sending and moving photos
         handler = Handler(Looper.getMainLooper()) {
             sendPhotos()
             true
@@ -53,12 +54,12 @@ class MyFileObserver(val folderPath: String) {
     }
 
     private fun sendPhotos() {
-        if (photoList.isNotEmpty()) {
+        if (photoQueue.isNotEmpty()) {
             // Move photos to "temp" folder
             movePhotosToTempFolder()
 
-            // Clear the list after sending and moving
-            photoList.clear()
+            // Clear the queue after sending and moving
+            photoQueue.clear()
         }
 
         // Schedule the handler to run again after 7 seconds
@@ -66,13 +67,14 @@ class MyFileObserver(val folderPath: String) {
     }
 
     private fun movePhotosToTempFolder() {
-        val dcimParentFile = File(FILE_OBSERVED_PATH).parentFile
-        val tempFolder = File("$dcimParentFile/temp")
+        val destinationParentFile = File(FILE_OBSERVED_PATH).parentFile
+        val tempFolder = File("$destinationParentFile/temp")
+
         if (!tempFolder.exists()) {
             tempFolder.mkdirs()
         }
 
-        for (file in photoList) {
+        for (file in photoQueue) {
             val destFile = File("$tempFolder/${file.name}")
 
             try {
@@ -81,18 +83,14 @@ class MyFileObserver(val folderPath: String) {
 
                 // Delete the source file
                 Files.delete(file.toPath())
-
-                // File successfully moved, remove it from photoList
-                //photoList.remove(file)
             } catch (e: Exception) {
                 // Handle the exception
-                e.printStackTrace()
-                Log.e(TAG, "Failed to move file: ${file.absolutePath}")
+                Log.e(TAG, "Failed to move file: ${file.absolutePath}", e)
             }
-        }
-        photoList.clear()
-    }
 
+            photoQueue.remove(file)
+        }
+    }
 
     fun onEvent(event: Int, fileRelativePath: String?) {
         when (event and ALL_EVENTS) {
@@ -100,7 +98,7 @@ class MyFileObserver(val folderPath: String) {
                 Log.d(TAG, "File created/updated: $it")
                 // Handle the created file here
                 val newFile = File("$folderPath/${it.split("-").last()}")
-                photoList.add(newFile)
+                photoQueue.add(newFile)
                 // TODO: camera save picture and then change its name, need to handle it better
 //                if (newFile.exists()) {
                 ApiService.sendFileToApi(newFile)
@@ -118,7 +116,6 @@ class MyFileObserver(val folderPath: String) {
 
     fun stopWatching() {
         handler?.removeCallbacksAndMessages(null)
-
         fileObserver?.stopWatching()
     }
 }

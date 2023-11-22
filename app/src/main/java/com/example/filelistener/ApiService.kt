@@ -35,13 +35,7 @@ class ApiService {
                     // Add file parameter
                     outputStream.writeBytes("$twoHyphens$boundary$lineEnd")
                     outputStream.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"${file.name}\"$lineEnd")
-                    outputStream.writeBytes(
-                        "Content-Type: ${
-                            URLConnection.guessContentTypeFromName(
-                                file.name
-                            )
-                        }$lineEnd"
-                    )
+                    outputStream.writeBytes("Content-Type: ${URLConnection.guessContentTypeFromName(file.name)}$lineEnd")
                     outputStream.writeBytes(lineEnd)
 
                     // Write file data

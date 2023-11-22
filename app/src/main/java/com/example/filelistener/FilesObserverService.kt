@@ -11,6 +11,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.example.filelistener.Constants.Companion.FILE_OBSERVED_PATH
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 class FilesObserverService : Service() {
+    private val TAG = "FilesObserverService"
     private val scope = CoroutineScope(Dispatchers.Default)
     private var fileObserver: MyFileObserver? = null
 
@@ -33,7 +35,7 @@ class FilesObserverService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("~~~~~~", "onStartCommand: 899")
+        Log.d(TAG, "onStartCommand: 899")
         startForeground(NOTIFICATION_ID, createNotification())
         startFileObserver()
         startUploading()
@@ -61,13 +63,15 @@ class FilesObserverService : Service() {
                 val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
 
                 File(cursor.getString(columnIndex)).parent?.let { cameraDirectory ->
+                    Log.d(TAG, "getCameraDirectoryPath: cameraDirectory - $cameraDirectory")
+
                     return cameraDirectory
                 }
             }
         }
 
-        // Default to the DCIM directory if no image is found (modify as needed)
-        return "${android.os.Environment.getExternalStorageDirectory()}/DCIM/Camera"
+        // Default directory if no image directory is found (modify as needed)
+        return FILE_OBSERVED_PATH
     }
 
     private fun startUploading() {
