@@ -38,15 +38,19 @@ class FilesObserverService : Service() {
         Log.d(TAG, "onStartCommand: 899")
         startForeground(NOTIFICATION_ID, createNotification())
         startFileObserver()
-        startUploading()
 
         return START_STICKY
     }
 
     private fun startFileObserver() {
         val directoryPath = getCameraDirectoryPath()
-        fileObserver = MyFileObserver(directoryPath)
-        fileObserver?.startWatching()
+
+        if (File(directoryPath).exists()) {
+            fileObserver = MyFileObserver(directoryPath)
+            fileObserver?.startWatching()
+        } else {
+            Log.e(TAG, "accessFolder: photo folder not found")
+        }
     }
 
     private fun getCameraDirectoryPath(): String {
@@ -74,15 +78,6 @@ class FilesObserverService : Service() {
         return FILE_OBSERVED_PATH
     }
 
-    private fun startUploading() {
-        scope.launch {
-            while (isActive) {
-                // Optionally, you can implement a delay or adjust the frequency of uploads
-                delay(5000)
-            }
-        }
-    }
-
     private fun createNotification(): Notification {
         // Create a notification channel (required for Android 8.0 and above)
         createNotificationChannel()
@@ -93,7 +88,7 @@ class FilesObserverService : Service() {
             this,
             0,
             notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         // Build the notification

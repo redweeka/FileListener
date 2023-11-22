@@ -14,8 +14,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.filelistener.Constants.Companion.FILE_OBSERVED_PATH
-import java.io.File
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
@@ -27,6 +25,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        getPermission()
+    }
+
+    private fun getPermission() {
         if (SDK_INT >= Build.VERSION_CODES.R) {
             Log.d(TAG, "onCreate: sdk 30 and above")
 
@@ -36,12 +38,12 @@ class MainActivity : AppCompatActivity() {
 
                 registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
                     if (Environment.isExternalStorageManager()) {
-                        accessFolder()
+                        startService()
                     }
                 }.launch(intent)
             } else {
                 Log.d(TAG, "onCreate: has permission")
-                accessFolder()
+                startService()
             }
         } else {
             Log.d(TAG, "onCreate: sdk below 30")
@@ -50,23 +52,15 @@ class MainActivity : AppCompatActivity() {
                 ActivityCompat.requestPermissions(this, arrayOf(WRITE_EXTERNAL_STORAGE), PERMISSION_REQUEST_CODE)
             } else {
                 Log.d(TAG, "onCreate: has permission")
-                accessFolder()
+                startService()
             }
         }
     }
 
-    private fun accessFolder() {
-        val file = File(FILE_OBSERVED_PATH)
-
-        if (file.exists()) {
-            myFileObserver = MyFileObserver(FILE_OBSERVED_PATH)
-            myFileObserver?.startWatching()
-            Log.d(TAG, "accessFolder: service 900")
-            //val serviceIntent = Intent(this, FilesObserverService::class.java)
-            //this.startService(serviceIntent)
-        } else {
-            Log.w(TAG, "accessFolder: file not exists")
-        }
+    private fun startService() {
+        Log.d(TAG, "startService: ")
+        val serviceIntent = Intent(this, FilesObserverService::class.java)
+        this.startService(serviceIntent)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -77,7 +71,7 @@ class MainActivity : AppCompatActivity() {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "onRequestPermissionsResult: has permission")
                     // Permission granted, now you can access the folder
-                    accessFolder()
+                    startService()
                 } else {
                     Log.d(TAG, "onRequestPermissionsResult: permission denied")
                 }
@@ -90,10 +84,5 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
 
         myFileObserver?.stopWatching()
-    }
-
-    override fun onBackPressed() {
-        Log.d(TAG, "onBackPressed: sdk $SDK_INT")
-
     }
 }
