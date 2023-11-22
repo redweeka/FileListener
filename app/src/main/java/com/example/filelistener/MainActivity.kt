@@ -18,7 +18,6 @@ import androidx.core.content.ContextCompat
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
     private val PERMISSION_REQUEST_CODE = 873
-    private var myFileObserver: MyFileObserver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate: ")
@@ -38,12 +37,12 @@ class MainActivity : AppCompatActivity() {
 
                 registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
                     if (Environment.isExternalStorageManager()) {
-                        startService()
+                        startBackgroundService()
                     }
                 }.launch(intent)
             } else {
                 Log.d(TAG, "onCreate: has permission")
-                startService()
+                startBackgroundService()
             }
         } else {
             Log.d(TAG, "onCreate: sdk below 30")
@@ -52,12 +51,12 @@ class MainActivity : AppCompatActivity() {
                 ActivityCompat.requestPermissions(this, arrayOf(WRITE_EXTERNAL_STORAGE), PERMISSION_REQUEST_CODE)
             } else {
                 Log.d(TAG, "onCreate: has permission")
-                startService()
+                startBackgroundService()
             }
         }
     }
 
-    private fun startService() {
+    private fun startBackgroundService() {
         Log.d(TAG, "startService: ")
         val serviceIntent = Intent(this, FilesObserverService::class.java)
         this.startService(serviceIntent)
@@ -71,18 +70,11 @@ class MainActivity : AppCompatActivity() {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "onRequestPermissionsResult: has permission")
                     // Permission granted, now you can access the folder
-                    startService()
+                    startBackgroundService()
                 } else {
                     Log.d(TAG, "onRequestPermissionsResult: permission denied")
                 }
             }
         }
-    }
-
-    override fun onDestroy() {
-        Log.d(TAG, "onDestroy: ")
-        super.onDestroy()
-
-        myFileObserver?.stopWatching()
     }
 }

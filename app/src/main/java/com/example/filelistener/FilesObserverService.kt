@@ -11,19 +11,16 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.filelistener.Constants.Companion.FILE_OBSERVED_PATH
+import com.example.filelistener.Globals.Companion.OBSERVED_FOLDER_PATH
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import java.io.File
 
 class FilesObserverService : Service() {
     private val TAG = "FilesObserverService"
     private val scope = CoroutineScope(Dispatchers.Default)
-    private var fileObserver: MyFileObserver? = null
+    private var fileObserver: MyFileScheduler? = null
 
     companion object {
         const val CHANNEL_ID = "UploadServiceChannel"
@@ -37,23 +34,22 @@ class FilesObserverService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand: 899")
         startForeground(NOTIFICATION_ID, createNotification())
+        initCameraDirectoryPath()
         startFileObserver()
 
         return START_STICKY
     }
 
     private fun startFileObserver() {
-        val directoryPath = getCameraDirectoryPath()
-
-        if (File(directoryPath).exists()) {
-            fileObserver = MyFileObserver(directoryPath)
+        if (File(OBSERVED_FOLDER_PATH).exists()) {
+            fileObserver = MyFileScheduler(OBSERVED_FOLDER_PATH)
             fileObserver?.startWatching()
         } else {
             Log.e(TAG, "accessFolder: photo folder not found")
         }
     }
 
-    private fun getCameraDirectoryPath(): String {
+    private fun initCameraDirectoryPath() {
         val projection = arrayOf(MediaStore.Images.Media.DATA)
 
         contentResolver.query(
@@ -69,13 +65,11 @@ class FilesObserverService : Service() {
                 File(cursor.getString(columnIndex)).parent?.let { cameraDirectory ->
                     Log.d(TAG, "getCameraDirectoryPath: cameraDirectory - $cameraDirectory")
 
-                    return cameraDirectory
+                    // Default directory if no image directory is found (modify as needed)
+                    OBSERVED_FOLDER_PATH = cameraDirectory
                 }
             }
         }
-
-        // Default directory if no image directory is found (modify as needed)
-        return FILE_OBSERVED_PATH
     }
 
     private fun createNotification(): Notification {
