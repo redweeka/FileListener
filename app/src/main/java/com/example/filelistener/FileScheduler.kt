@@ -2,11 +2,10 @@ package com.example.filelistener
 
 import android.util.Log
 import java.io.File
-import java.nio.file.Files
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class MyFileScheduler(private val folderPath: String) {
+class FileScheduler(private val observedFolder: File) {
     private val TAG = "MyFileScheduler"
     private val scheduler = Executors.newSingleThreadScheduledExecutor()
     private var isScheduled = false
@@ -14,13 +13,12 @@ class MyFileScheduler(private val folderPath: String) {
     private fun sendPhotos() {
         Log.d(TAG, "sendPhotos: search for new photos")
 
-        Files.walk(File(folderPath).toPath())
-            .forEach { file ->
-                if (Files.isRegularFile(file)) {
-                    Log.i(TAG, "sendPhotos: $file")
-                    ApiService.sendFileToApi(file.toFile())
-                }
+        observedFolder.listFiles()?.forEach { currentFile ->
+            if (currentFile.isFile) {
+                Log.i(TAG, "sendPhotos: $currentFile")
+                ApiService.sendFileToApi(currentFile)
             }
+        }
     }
 
     fun startWatching() {

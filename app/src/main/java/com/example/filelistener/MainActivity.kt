@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
     private fun startBackgroundService() {
         Log.d(TAG, "startService: ")
         val serviceIntent = Intent(this, FilesObserverService::class.java)
-        this.startService(serviceIntent)
+        startService(serviceIntent)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
