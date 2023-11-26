@@ -11,7 +11,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.filelistener.Globals.Companion.OBSERVED_FOLDER_PATH
+import com.example.filelistener.Globals.Companion.OBSERVED_FOLDER
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -44,8 +44,8 @@ class FilesObserverService : Service() {
     }
 
     private fun startFileObserver() {
-        if (OBSERVED_FOLDER_PATH.exists()) {
-            fileObserver = FileScheduler(OBSERVED_FOLDER_PATH)
+        if (OBSERVED_FOLDER.exists()) {
+            fileObserver = FileScheduler(OBSERVED_FOLDER)
             fileObserver?.startWatching()
         } else {
             Log.e(TAG, "accessFolder: photo folder not found")

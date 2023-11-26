@@ -2,8 +2,8 @@ package com.example.filelistener
 
 import android.util.Log
 import com.example.filelistener.Globals.Companion.API_PHOTOS_FILE_URL
-import com.example.filelistener.Globals.Companion.DEFAULT_PHOTO_SENT_FOLDER_NAME
-import com.example.filelistener.Globals.Companion.OBSERVED_FOLDER_PATH
+import com.example.filelistener.Globals.Companion.PHOTO_SENT_FOLDER_NAME
+import com.example.filelistener.Globals.Companion.OBSERVED_FOLDER
 import java.io.DataOutputStream
 import java.io.File
 import java.net.HttpURLConnection
@@ -63,56 +63,6 @@ class ApiService {
             }
         }
 
-        /*fun sendFileToApi(file: File) {
-            try {
-                val url = URL(API_PHOTOS_FILE_URL)
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
-                connection.doOutput = true
-
-                // Create a boundary for the multipart request
-                val boundary = "*****" + System.currentTimeMillis() + "*****"
-                connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
-
-                // Open a file input stream for the photo
-                val fileInputStream = FileInputStream(file)
-
-                // Get the output stream of the connection
-                val outputStream = DataOutputStream(connection.outputStream)
-
-                // Write the photo as a part of the multipart request
-                outputStream.writeBytes("--$boundary\r\n")
-                outputStream.writeBytes("Content-Disposition: form-data; name=\"photo\"; filename=\"$file\"\r\n")
-                outputStream.writeBytes("Content-Type: application/octet-stream\r\n\r\n")
-
-                // Read the photo data from the file input stream and write it to the output stream
-                val buffer = ByteArray(1024)
-                var bytesRead: Int
-                while (fileInputStream.read(buffer).also { bytesRead = it } != -1) {
-                    outputStream.write(buffer, 0, bytesRead)
-                }
-
-                outputStream.writeBytes("\r\n")
-                outputStream.writeBytes("--$boundary--\r\n")
-
-                // Close the streams and the connection
-                fileInputStream.close()
-                outputStream.flush()
-                outputStream.close()
-
-                // Get the response code from the server
-                val responseCode = connection.responseCode
-
-                // Log for debugging purposes
-                Log.d(TAG, "Response Code: $responseCode")
-
-                // Close the connection
-                connection.disconnect()
-            } catch (e: Exception) {
-                Log.e(TAG, "Error uploading photo: ${e.message}")
-            }
-        }*/
-
         private fun createDirectoryIfNotExists(directory: File): Boolean =
             if (!directory.exists()) {
                 directory.mkdirs()
@@ -121,8 +71,8 @@ class ApiService {
             }
 
         private fun movePhotoToSentFolder(file: File) {
-            val destinationParentFile = OBSERVED_FOLDER_PATH.parentFile
-            val tempFolder = File("$destinationParentFile/$DEFAULT_PHOTO_SENT_FOLDER_NAME")
+            val destinationParentFile = OBSERVED_FOLDER.parentFile
+            val tempFolder = File("$destinationParentFile/$PHOTO_SENT_FOLDER_NAME")
             val destFile = File("$tempFolder/${file.name}")
 
             if (createDirectoryIfNotExists(tempFolder)) {
