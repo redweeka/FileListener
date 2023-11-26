@@ -6,24 +6,20 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.IBinder
-import android.provider.MediaStore
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.filelistener.Constants.Companion.FILE_OBSERVED_PATH
+import com.example.filelistener.Globals.Companion.OBSERVED_FOLDER_PATH
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import java.io.File
 
 class FilesObserverService : Service() {
     private val TAG = "FilesObserverService"
     private val scope = CoroutineScope(Dispatchers.Default)
-    private var fileObserver: MyFileObserver? = null
+    private var fileObserver: FileScheduler? = null
 
     companion object {
         const val CHANNEL_ID = "UploadServiceChannel"
@@ -34,52 +30,25 @@ class FilesObserverService : Service() {
         return null
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand: 899")
+    override fun onCreate() {
+        super.onCreate()
+        Log.d(TAG, "onCreate: start service and register boot listener")
+
+        // Register receiver for next boot
+        val filter = IntentFilter(Intent.ACTION_BOOT_COMPLETED)
+        registerReceiver(BootReceiver(), filter)
+
+        // Start the service
         startForeground(NOTIFICATION_ID, createNotification())
         startFileObserver()
-        startUploading()
-
-        return START_STICKY
     }
 
     private fun startFileObserver() {
-        val directoryPath = getCameraDirectoryPath()
-        fileObserver = MyFileObserver(directoryPath)
-        fileObserver?.startWatching()
-    }
-
-    private fun getCameraDirectoryPath(): String {
-        val projection = arrayOf(MediaStore.Images.Media.DATA)
-
-        contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            null,
-            null,
-            "${MediaStore.Images.Media.DATE_TAKEN} DESC"
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-
-                File(cursor.getString(columnIndex)).parent?.let { cameraDirectory ->
-                    Log.d(TAG, "getCameraDirectoryPath: cameraDirectory - $cameraDirectory")
-
-                    return cameraDirectory
-                }
-            }
-        }
-
-        // Default directory if no image directory is found (modify as needed)
-        return FILE_OBSERVED_PATH
-    }
-
-    private fun startUploading() {
-        scope.launch {
-            while (isActive) {
-                // Optionally, you can implement a delay or adjust the frequency of uploads
-                delay(5000)
-            }
+        if (OBSERVED_FOLDER_PATH.exists()) {
+            fileObserver = FileScheduler(OBSERVED_FOLDER_PATH)
+            fileObserver?.startWatching()
+        } else {
+            Log.e(TAG, "accessFolder: photo folder not found")
         }
     }
 
@@ -93,7 +62,7 @@ class FilesObserverService : Service() {
             this,
             0,
             notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         // Build the notification
