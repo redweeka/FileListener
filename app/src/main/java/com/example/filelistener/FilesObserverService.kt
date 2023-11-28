@@ -11,7 +11,6 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.filelistener.Globals.Companion.OBSERVED_FOLDER_PATH
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -44,12 +43,8 @@ class FilesObserverService : Service() {
     }
 
     private fun startFileObserver() {
-        if (OBSERVED_FOLDER_PATH.exists()) {
-            fileObserver = FileScheduler(OBSERVED_FOLDER_PATH)
-            fileObserver?.startWatching()
-        } else {
-            Log.e(TAG, "accessFolder: photo folder not found")
-        }
+        fileObserver = FileScheduler()
+        fileObserver?.startWatching()
     }
 
     private fun createNotification(): Notification {
@@ -67,8 +62,8 @@ class FilesObserverService : Service() {
 
         // Build the notification
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Uploading Service")
-            .setContentText("Service is running")
+            .setContentTitle("Photo service")
+            .setContentText("Uploading to url ${ConfigManager.getInstance().getUrl()}")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .build()
